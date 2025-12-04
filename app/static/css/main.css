@@ -11,7 +11,7 @@
 
 body {
   min-height: 100vh;
-  background: var(--gradient);
+  background: linear-gradient(135deg, #4b006e, #8f00ff);
   color: white;
   font-family: var(--font-family, "Inter", system-ui, -apple-system, "Segoe UI", sans-serif);
   color: var(--accent);
