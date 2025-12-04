@@ -9,7 +9,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-
     - name: Checkout code
       uses: actions/checkout@v3
 
@@ -23,32 +22,21 @@ jobs:
     - name: Login to Amazon ECR
       uses: aws-actions/amazon-ecr-login@v1
 
-    - name: Build & Push Docker image
+    - name: Build & Push Docker Image
       run: |
         IMAGE=${{ secrets.ECR_REGISTRY }}/${{ secrets.ECR_REPOSITORY }}:latest
         docker build -t $IMAGE .
         docker push $IMAGE
 
-    - name: Install eksctl
-      run: |
-        curl --silent --location "https://github.com/eksctl-io/eksctl/releases/latest/download/eksctl_Linux_amd64.tar.gz" -o eksctl.tar.gz
-        tar -xzf eksctl.tar.gz
-        sudo mv eksctl /usr/local/bin/
-        eksctl version
-
     - name: Update kubeconfig
       run: |
-        eksctl utils write-kubeconfig --region ${{ secrets.AWS_REGION }} --cluster ${{ secrets.EKS_CLUSTER_NAME }}
+        aws eks update-kubeconfig --region ${{ secrets.AWS_REGION }} --name ${{ secrets.EKS_CLUSTER_NAME }}
 
-    - name: Apply Kubernetes manifests
-      run: |
-        kubectl apply -f k8s/
-
-    - name: Update deployment image
+    - name: Deploy updated image to EKS
       run: |
         IMAGE=${{ secrets.ECR_REGISTRY }}/${{ secrets.ECR_REPOSITORY }}:latest
         kubectl set image deployment/inventory-app-deployment inventory-app=$IMAGE -n inventory-app
 
-    - name: Wait for rollout
+    - name: Verify Rollout
       run: |
         kubectl rollout status deployment/inventory-app-deployment -n inventory-app
